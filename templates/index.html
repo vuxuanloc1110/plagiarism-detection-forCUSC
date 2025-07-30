@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm kiếm nội dung</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a4aff; /* A friendly, vibrant blue-purple */
+            --primary-dark: #3b3bff;
+            --accent-color: #ff6b6b; /* A lively coral for highlights/attention */
+            --text-color: #34495e; /* Darker, soft text */
+            --light-text-color: #7f8c8d; /* Lighter grey for subtle text */
+            --background-light: #f5f8fa; /* Soft, almost white background */
+            --card-background: #ffffff;
+            --border-color: #e0e6ec;
+            --shadow-subtle: rgba(50, 50, 93, 0.05);
+            --shadow-medium: rgba(50, 50, 93, 0.1);
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-color);
+            margin: 0;
+            padding: 25px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 2.2em;
+        }
+
+        h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: 700;
+            font-size: 1.3em;
+        }
+
+        /* Form upload + nút reset */
+        .form-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+        
+        .form-controls form {
+            padding: 0;
+            background: none;
+            box-shadow: none;
+        }
+        input[type="file"] {
+            padding: 12px;
+            font-size: 15px;
+            border-radius: 10px; /* Rounded input field */
+            background-color: #edf2f7;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-color);
+        }
+
+        input[type="file"]:hover {
+            background-color: #e2e8f0;
+        }
+
+        button, input[type="submit"] {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px; /* Fully rounded buttons */
+            box-shadow: 0 4px 10px var(--shadow-subtle);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex; /* For icon alignment */
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* Space between text and icon */
+        }
+
+        button:hover, input[type="submit"]:hover {
+            background: linear-gradient(135deg, var(--primary-dark), #3a3aeb);
+            box-shadow: 0 6px 15px var(--shadow-medium);
+            transform: translateY(-2px); /* Subtle lift effect */
+        }
+
+        .container {
+            display: flex;
+            gap: 25px;
+            margin-top: 20px;
+            flex-grow: 1; /* Allows container to take remaining height */
+        }
+
+        .half, .results, .summary-box {
+            background: var(--card-background);
+            border-radius: 15px; /* Consistent rounded corners */
+            padding: 25px;
+            box-shadow: 0 4px 15px var(--shadow-subtle);
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .half {
+            flex: 1; /* Takes available space */
+            min-height: 300px; /* Ensure a minimum height even if content is small */
+        }
+
+        .right-half {
+            width: 40%; /* Slightly adjusted width for summary box */
+            display: flex;
+            flex-direction: column; /* Changed to column for better vertical flow */
+            gap: 25px;
+        }
+
+        .results {
+            flex: 3; /* Allows results to take more space */
+        }
+
+        .summary-box {
+            flex: 1; /* Takes remaining space */
+            text-align: center;
+            font-size: 16px;
+            display: flex; /* Use flexbox for vertical centering */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .result-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px; /* Rounded result cards */
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s ease, transform 0.2s ease;
+            position: relative;
+            overflow: hidden; /* For the top border effect */
+        }
+
+        /* Top border animation on hover */
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease-out;
+        }
+
+        .result-card:hover {
+            box-shadow: 0 8px 20px var(--shadow-medium);
+            transform: translateY(-5px); /* Lift effect */
+        }
+
+        .result-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .match-level {
+            padding: 8px 15px;
+            border-radius: 8px; /* Slightly rounded tags */
+            font-weight: 700;
+            font-size: 13px;
+            color: white; /* Default white text for match levels */
+            text-transform: uppercase;
+        }
+
+        .high-match {
+            background-color: #e74c3c; /* Red */
+        }
+
+        .medium-match {
+            background-color: #f39c12; /* Orange */
+            color: var(--text-color); /* Better contrast for orange */
+        }
+
+        .low-match {
+            background-color: #27ae60; /* Green */
+        }
+
+        .result-text {
+            font-size: 15px;
+            margin-top: 10px;
+            color: var(--light-text-color);
+        }
+
+        .result-text b {
+            color: var(--text-color); /* Emphasize bold text */
+        }
+
+        .source-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+            display: inline-flex; /* For icon alignment */
+            align-items: center;
+            gap: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .source-link:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 600px;
+            margin: auto;
+            background: var(--card-background);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px var(--shadow-subtle);
+            border: 1px solid var(--border-color);
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-color);
+        }
+        
+        .input-group select {
+            padding: 12px;
+            font-size: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background-color: #edf2f7;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group select:hover {
+            background-color: #e2e8f0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .secondary-button {
+            background: none;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .secondary-button:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }        
+        .summary-box p {
+            margin: 8px 0;
+            color: var(--light-text-color);
+        }
+
+        .summary-box b {
+            color: var(--text-color);
+        }
+
+        .summary-box span {
+            font-weight: 700;
+            color: var(--primary-dark);
+            font-size: 1.15em; /* Slightly larger for emphasis */
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.85); /* Slightly less transparent */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .spinner {
+            width: 55px;
+            height: 55px;
+            border: 5px solid rgba(74, 74, 255, 0.3); /* Based on primary color */
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 1.3em;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+            .half, .right-half {
+                width: 100%;
+            }
+            .right-half {
+                flex-direction: column; /* Stack results and summary vertically */
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            h2 {
+                font-size: 1.8em;
+            }
+            .form-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            form {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 15px;
+            }
+            input[type="file"], button, input[type="submit"] {
+                width: 100%;
+                margin-top: 10px;
+            }
+            .half, .results, .summary-box {
+                padding: 18px;
+            }
+            .result-card {
+                padding: 15px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            .match-level {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+    <script>
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Calculate and display statistics
+            const results = {{ results | tojson }}; // Assuming 'results' is passed from Flask
+            const totalResultsSpan = document.getElementById('total-results');
+            const averageScoreSpan = document.getElementById('average-score');
+            const totalSourcesSpan = document.getElementById('total-sources');
+
+            if (results && results.length > 0) {
+                const totalSentences = results.length;
+                let totalSimilarity = 0;
+                const sources = new Set();
+
+                results.forEach(result => {
+                    totalSimilarity += result.sentence_similarity;
+                    sources.add(result.filename);
+                });
+
+                const averageSimilarity = (totalSimilarity / totalSentences) * 100;
+
+                totalResultsSpan.textContent = totalSentences;
+                averageScoreSpan.textContent = averageSimilarity.toFixed(2) + '%';
+                totalSourcesSpan.textContent = sources.size;
+            } else {
+                totalResultsSpan.textContent = "0";
+                averageScoreSpan.textContent = "0%";
+                totalSourcesSpan.textContent = "0";
+            }
+        });
+
+        // This function would ideally scroll to the highlighted sentence in the `doc_content` div.
+        // For this to work, your `doc_content` would need HTML elements with IDs corresponding to `result.sentence_id`.
+        function scrollToSentence(sentenceId) {
+            const targetElement = document.getElementById('sentence-' + sentenceId);
+            if (targetElement) {
+                const contentBox = document.querySelector('.half'); // Assuming .half contains the doc_content
+                if (contentBox) {
+                    contentBox.scrollTo({
+                        top: targetElement.offsetTop - contentBox.offsetTop - 20, // Adjust offset as needed
+                        behavior: 'smooth'
+                    });
+                    // Optional: briefly highlight the sentence
+                    targetElement.style.transition = 'background-color 0.5s ease';
+                    targetElement.style.backgroundColor = '#ffeea8'; /* Soft yellow highlight */
+                    setTimeout(() => {
+                        targetElement.style.backgroundColor = '';
+                    }, 1500);
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    {% if error or message %}
+        <div class="alert alert-info">{{ error or message }}</div>
+    {% endif %}
+    <h2>Tìm kiếm nội dung từ tệp</h2>
+    <div class="form-controls">
+        <form action="/" method="post" enctype="multipart/form-data" onsubmit="showLoading()" class="upload-form">
+            <div class="input-group">
+                <input type="file" name="file" required aria-label="Chọn tệp để kiểm tra">
+            </div>
+    
+            <div class="input-group">
+                <label for="mode">Chế độ tìm kiếm:</label>
+                <select name="mode" id="mode" required>
+                    <option value="both">🔍 Elasticsearch + Brave</option>
+                    <option value="elastic">📁 Chỉ Elasticsearch</option>
+                    <option value="brave">🌐 Chỉ Brave Search</option>
+                </select>
+            </div>
+    
+            <div class="button-group">
+                <button type="submit" aria-label="Tải lên và tìm kiếm">
+                    🔎 Tải lên & tìm kiếm
+                </button>
+                <a href="/upload-index" class="secondary-button" aria-label="Thêm dữ liệu gốc để index">
+                    ➕ Thêm dữ liệu gốc (index)
+                </a>
+            </div>
+        </form>
+    </div>
+    <div class="summary-box">
+        <h3>Thống kê kết quả</h3>
+        <p><b>Tổng số câu nghi ngờ:</b> <span id="total-results">{{ total_results | default(0) }}</span></p>
+        <p><b>Điểm tương đồng trung bình:</b> <span id="average-score">{{ average_score | default(0) }}%</span></p>
+        <p><b>Số nguồn tìm thấy:</b> <span id="total-sources">{{ total_sources | default(0) }}</span></p>
+    </div>
+    <div class="container">
+        <div class="half">
+            <h3>Nội dung tệp đã tải lên:</h3>
+            {% if doc_content %}
+            <div>{{ doc_content | safe }}</div>
+            {% else %}
+            <p style="color: var(--light-text-color);">Chưa có tệp nào được tải lên. Hãy tải lên một tệp để xem nội dung tại đây.</p>
+            {% endif %}
+        </div>
+        <div class="right-half">
+            <div class="results">
+                <h3>Kết quả tìm kiếm:</h3>
+                {% if results %}
+                    {% for result in results %}
+                    <div class="result-card">
+                        <div class="result-header">
+                            <span class="match-level
+                                {% if result.sentence_similarity >= 0.8 %} high-match
+                                {% elif result.sentence_similarity >= 0.6 %} medium-match
+                                {% else %} low-match
+                                {% endif %}
+                            ">
+                                {% if result.sentence_similarity >= 0.8 %} TRÙNG LẶP CAO - {{ (result.sentence_similarity * 100) | round(2) }}%
+                                {% elif result.sentence_similarity >= 0.6 %} TRÙNG LẶP TRUNG BÌNH - {{ (result.sentence_similarity * 100) | round(2) }}%
+                                {% else %} TRÙNG LẶP THẤP - {{ (result.sentence_similarity * 100) | round(2) }}%
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="result-text"><b>Câu nghi ngờ:</b> {{ result.highlighted_original_sentence | safe }}</div>
+                        <div class="result-text"><b>Câu gốc:</b> {{ result.highlighted_matched_sentence | safe }}</div>
+                        <div class="result-text"><b>Nguồn:</b> {{ result.filename }}</div>
+                        <button onclick="scrollToSentence({{ result.sentence_id }})" class="source-link" aria-label="Xem nguồn câu {{ result.sentence_id }}">
+                            Xem nguồn
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right"><path d="M7 7h10v10"/><path d="M7 17L17 7"/></svg>
+                        </button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: var(--light-text-color);">Không tìm thấy kết quả nào. Vui lòng tải lên một tệp và thực hiện tìm kiếm.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p class="loading-text">Đang xử lý, vui lòng chờ...</p>
+    </div>
+</body>
+</html>
+<script>
+    function scrollToSentence(index) {
+        // Không điều chỉnh index, giữ nguyên để khớp với sentence
+        let adjustedIndex = parseInt(index); // Chỉ parse để đảm bảo là số
+        let element = document.getElementById("sentence-" + adjustedIndex);
+        let resultCard = document.getElementById("result-card-" + index);
+    
+        console.log("Scrolling to:", "sentence-" + adjustedIndex, element);
+        console.log("Scrolling to result card:", "result-card-" + index, resultCard);
+    
+        // Cuộn đến câu gốc trong nội dung file
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+    
+            let allSpans = element.querySelectorAll("span");
+            if (allSpans.length > 0) {
+                let deepestSpan = [...allSpans].reverse().find(span => !span.querySelector("span"));
+                if (deepestSpan) {
+                    console.log("Highlighting deepest span:", deepestSpan);
+                    let originalColor = deepestSpan.style.backgroundColor;
+                    deepestSpan.style.backgroundColor = "yellow";
+                    setTimeout(() => {
+                        deepestSpan.style.backgroundColor = originalColor || "";
+                    }, 2000);
+                }
+            }
+        } else {
+            console.warn("Không tìm thấy phần tử với ID:", "sentence-" + adjustedIndex);
+        }
+    
+        // Cuộn đến result card tương ứng
+        if (resultCard) {
+            resultCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            resultCard.style.border = "2px solid red";
+            setTimeout(() => {
+                resultCard.style.border = "none";
+            }, 2000);
+        } else {
+            console.warn("Không tìm thấy result card với ID:", "result-card-" + index);
+        }
+    }
+
+    function scrollToResult(index) {
+        // Giữ nguyên index để khớp với result-card
+        let adjustedIndex = parseInt(index); // Chỉ parse để đảm bảo là số
+        let resultCard = document.getElementById("result-card-" + adjustedIndex);
+        if (resultCard) {
+            resultCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            resultCard.style.border = "2px solid red";
+            setTimeout(() => {
+                resultCard.style.border = "none";
+            }, 2000);
+        } else {
+            console.warn("Không tìm thấy result card với ID:", "result-card-" + adjustedIndex);
+        }
+    }
+    
+    // Sự kiện click để kiểm tra
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("[id^='sentence-']").forEach(sentence => {
+            sentence.style.cursor = "pointer";
+            sentence.addEventListener("click", function () {
+                let sentenceId = this.id.replace("sentence-", "");
+                scrollToResult(sentenceId); // Gọi hàm với index giữ nguyên
+            });
+        });
+    
+        // Thêm sự kiện click cho result-card (nếu cần)
+        document.querySelectorAll("[id^='result-card-']").forEach(card => {
+            card.style.cursor = "pointer";
+            card.addEventListener("click", function () {
+                let cardId = this.id.replace("result-card-", "");
+                scrollToSentence(cardId); // Gọi hàm với index giữ nguyên
+            });
+        });
+    
+        hideLoading();
+    });
+function showLoading() {
+    document.getElementById("loading").style.display = "flex";
+}
+
+function hideLoading() {
+    document.getElementById("loading").style.display = "none";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    hideLoading();
+});
+document.addEventListener("DOMContentLoaded", function () {
+    // Lấy toàn bộ câu gốc
+    let sentenceElements = document.querySelectorAll("[id^='sentence-']");
+    let fullText = Array.from(sentenceElements).map(el => el.textContent).join(" ");
+    let fullWords = fullText.trim().split(/\s+/);
+    let totalWords = fullWords.length;
+
+    // Set để lưu trữ các từ trùng duy nhất
+    let matchedWordSet = new Set();
+
+    // Duyệt các đoạn bị trùng
+    let resultCards = document.querySelectorAll(".result-card");
+    resultCards.forEach(card => {
+        let matchedElement = card.querySelector(".matched-text");
+        if (matchedElement) {
+            let words = matchedElement.textContent.trim().split(/\s+/);
+            words.forEach(word => matchedWordSet.add(word));
+        }
+    });
+
+    let matchedWordsCount = matchedWordSet.size;
+
+    // Tính điểm đạo văn
+    let plagiarismPercent = totalWords > 0
+        ? ((matchedWordsCount / totalWords) * 100).toFixed(2) + "%"
+        : "0%";
+
+    // Hiển thị
+    if (document.getElementById("plagiarism-percent")) {
+        document.getElementById("plagiarism-percent").textContent = plagiarismPercent;
+    }
+
+    // Debug
+    console.log("Tổng số từ:", totalWords);
+    console.log("Số từ trùng (duy nhất):", matchedWordsCount);
+    console.log("Tỷ lệ đạo văn (chuẩn):", plagiarismPercent);
+});
+</script>
