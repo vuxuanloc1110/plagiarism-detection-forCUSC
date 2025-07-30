@@ -73,7 +73,7 @@ pip install -r requirements.txt
     ```
 3. Tải và chạy Elasticsearch:
     ```bash
-    docker pull docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    docker pull docker.elastic.co/elasticsearch/elasticsearch:8.5.3
     docker run --name elasticsearch \
         --net elastic \
         -p 9200:9200 -p 9300:9300 \
